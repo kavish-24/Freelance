@@ -8,46 +8,91 @@ export default function Dashboard() {
 
   const styles = {
     container: {
-      padding: "1rem",
-      maxWidth: "37.5rem",
+      padding: "2rem",
+      maxWidth: "720px",
       margin: "0 auto",
-      fontFamily: "Arial, sans-serif",
+      fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+      backgroundColor: "#f9fafb",
+      minHeight: "100vh",
     },
-    title: { fontSize: "1.5rem", fontWeight: "bold", marginBottom: "1rem" },
-    section: { marginBottom: "1.5rem" },
+    title: {
+      fontSize: "2rem",
+      fontWeight: "700",
+      marginBottom: "1.5rem",
+      color: "#1f2937",
+      textAlign: "center",
+    },
+    section: {
+      marginBottom: "2rem",
+    },
     sectionTitle: {
-      fontSize: "1.125rem",
+      fontSize: "1.25rem",
       fontWeight: "600",
-      marginBottom: "0.75rem",
+      marginBottom: "1rem",
+      color: "#374151",
     },
     jobCard: {
-      padding: "0.75rem",
+      padding: "1rem",
       backgroundColor: "#ffffff",
-      borderRadius: "0.375rem",
-      boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
-      marginBottom: "0.75rem",
+      borderRadius: "0.5rem",
+      boxShadow: "0 4px 6px rgba(0, 0, 0, 0.05)",
+      marginBottom: "1rem",
       display: "flex",
       flexDirection: "column",
       cursor: "pointer",
+      transition: "transform 0.2s, box-shadow 0.2s",
     },
-    jobTitle: { fontWeight: "600", marginBottom: "0.25rem" },
-    jobMeta: { fontSize: "0.875rem", color: "#666" },
+    jobCardHover: {
+      transform: "translateY(-2px)",
+      boxShadow: "0 6px 12px rgba(0, 0, 0, 0.1)",
+    },
+    jobTitle: {
+      fontWeight: "600",
+      marginBottom: "0.25rem",
+      color: "#111827",
+      fontSize: "1rem",
+    },
+    jobMeta: {
+      fontSize: "0.875rem",
+      color: "#6b7280",
+    },
     chartBox: {
-      padding: "1rem",
+      padding: "2rem",
       backgroundColor: "#ffffff",
-      borderRadius: "0.375rem",
+      borderRadius: "0.5rem",
       textAlign: "center",
-      boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
+      boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
+      color: "#6b7280",
+      fontStyle: "italic",
+    },
+    buttonContainer: {
+      display: "flex",
+      gap: "1rem",
+      flexWrap: "wrap",
     },
     button: {
-      padding: "0.5rem",
-      backgroundColor: "#4B5EFC",
+      padding: "0.75rem 1.25rem",
+      backgroundColor: "#4F46E5",
       color: "#ffffff",
-      borderRadius: "0.25rem",
-      textAlign: "center",
-      cursor: "pointer",
-      marginRight: "0.5rem",
+      borderRadius: "0.375rem",
       border: "none",
+      cursor: "pointer",
+      fontWeight: "500",
+      transition: "background-color 0.2s",
+    },
+    buttonHover: {
+      backgroundColor: "#4338ca",
+    },
+    error: {
+      color: "#dc2626",
+      marginBottom: "0.75rem",
+      backgroundColor: "#fee2e2",
+      padding: "0.5rem",
+      borderRadius: "0.375rem",
+    },
+    noJobs: {
+      color: "#6b7280",
+      fontStyle: "italic",
     },
   };
 
@@ -84,32 +129,54 @@ export default function Dashboard() {
 
   return (
     <div style={styles.container}>
-      <h1 style={styles.title}>Dashboard</h1>
+      <h1 style={styles.title}>My Dashboard</h1>
 
       <div style={styles.section}>
-        <h2 style={styles.sectionTitle}>Actions</h2>
-        <button style={styles.button} onClick={() => navigate("/post-job")}>
-          Post a Job
-        </button>
-        <button style={styles.button} onClick={() => navigate("/bookings")}>
-          View Bookings
-        </button>
+        <h2 style={styles.sectionTitle}>Quick Actions</h2>
+        <div style={styles.buttonContainer}>
+          <button
+            style={styles.button}
+            onMouseOver={(e) =>
+              (e.currentTarget.style.backgroundColor = styles.buttonHover.backgroundColor)
+            }
+            onMouseOut={(e) =>
+              (e.currentTarget.style.backgroundColor = styles.button.backgroundColor)
+            }
+            onClick={() => navigate("/post-job")}
+          >
+            Post a Job
+          </button>
+          <button
+            style={styles.button}
+            onMouseOver={(e) =>
+              (e.currentTarget.style.backgroundColor = styles.buttonHover.backgroundColor)
+            }
+            onMouseOut={(e) =>
+              (e.currentTarget.style.backgroundColor = styles.button.backgroundColor)
+            }
+            onClick={() => navigate("/bookings")}
+          >
+            View Bookings
+          </button>
+        </div>
       </div>
 
       <div style={styles.section}>
         <h2 style={styles.sectionTitle}>My Jobs</h2>
-        {error && (
-          <div style={{ color: "#dc2626", marginBottom: "0.75rem" }}>
-            {error}
-          </div>
-        )}
+        {error && <div style={styles.error}>{error}</div>}
         {jobs.length === 0 ? (
-          <div>No jobs found.</div>
+          <div style={styles.noJobs}>You haven't posted or taken any jobs yet.</div>
         ) : (
           jobs.map((job) => (
             <div
               key={job._id}
               style={styles.jobCard}
+              onMouseOver={(e) => {
+                Object.assign(e.currentTarget.style, styles.jobCardHover);
+              }}
+              onMouseOut={(e) => {
+                Object.assign(e.currentTarget.style, styles.jobCard);
+              }}
               onClick={() => navigate(`/booking/${job._id}`)}
             >
               <span style={styles.jobTitle}>{job.title}</span>
@@ -123,7 +190,7 @@ export default function Dashboard() {
 
       <div style={styles.section}>
         <h2 style={styles.sectionTitle}>Analytics</h2>
-        <div style={styles.chartBox}>(Chart Placeholder)</div>
+        <div style={styles.chartBox}>Chart coming soon...</div>
       </div>
     </div>
   );

@@ -11,8 +11,7 @@ export default function PostJob() {
   const [success, setSuccess] = useState("");
   const navigate = useNavigate();
 
- const API_BASE = process.env.REACT_APP_API_BASE || "http://localhost:5000/api";
-
+  const API_BASE = process.env.REACT_APP_API_BASE || "http://localhost:5000/api";
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -56,129 +55,140 @@ export default function PostJob() {
     }
   };
 
-  return (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        minHeight: "100vh",
-        backgroundColor: "#f9fafb",
-        padding: "0.5rem",
-      }}
-    >
-      <form
-        onSubmit={handleSubmit}
-        style={{
-          backgroundColor: "#ffffff",
-          padding: "1.5rem",
-          borderRadius: "0.375rem",
-          boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
-          width: "100%",
-          maxWidth: "30rem",
-        }}
-      >
-        <h2
-          style={{
-            fontSize: "1.5rem",
-            fontWeight: "bold",
-            marginBottom: "1rem",
-            textAlign: "center",
-          }}
-        >
-          Post a Job
-        </h2>
+  const styles = {
+    container: {
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      minHeight: "100vh",
+      backgroundColor: "#f9fafb",
+      padding: "1rem",
+    },
+    form: {
+      backgroundColor: "#ffffff",
+      padding: "2rem",
+      borderRadius: "0.5rem",
+      boxShadow: "0 2px 8px rgba(0, 0, 0, 0.05)",
+      width: "100%",
+      maxWidth: "30rem",
+    },
+    heading: {
+      fontSize: "1.75rem",
+      fontWeight: "700",
+      marginBottom: "1.5rem",
+      textAlign: "center",
+      color: "#1f2937",
+    },
+    label: {
+      display: "block",
+      fontWeight: "600",
+      marginBottom: "0.25rem",
+      color: "#374151",
+    },
+    input: {
+      width: "100%",
+      padding: "0.5rem",
+      marginBottom: "1rem",
+      border: "1px solid #d1d5db",
+      borderRadius: "0.375rem",
+      outline: "none",
+      fontSize: "1rem",
+    },
+    select: {
+      width: "100%",
+      padding: "0.5rem",
+      marginBottom: "1rem",
+      border: "1px solid #d1d5db",
+      borderRadius: "0.375rem",
+      fontSize: "1rem",
+    },
+    button: {
+      width: "100%",
+      backgroundColor: "#3b82f6",
+      color: "#ffffff",
+      padding: "0.75rem",
+      fontWeight: "600",
+      border: "none",
+      borderRadius: "0.375rem",
+      cursor: "pointer",
+      transition: "background-color 0.2s",
+    },
+    buttonHover: {
+      backgroundColor: "#2563eb",
+    },
+    message: {
+      marginBottom: "1rem",
+      fontWeight: "500",
+    },
+    error: {
+      color: "#dc2626",
+    },
+    success: {
+      color: "#16a34a",
+    },
+  };
 
+  return (
+    <div style={styles.container}>
+      <form onSubmit={handleSubmit} style={styles.form}>
+        <h2 style={styles.heading}>Post a Job</h2>
+
+        <label style={styles.label}>Task Title</label>
         <input
-          style={inputStyle}
+          style={styles.input}
           type="text"
-          placeholder="Task Title"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           required
         />
 
+        <label style={styles.label}>Description</label>
         <textarea
-          style={inputStyle}
-          placeholder="Description"
+          style={{ ...styles.input, height: "100px", resize: "vertical" }}
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           required
         />
 
+        <label style={styles.label}>Location</label>
         <input
-          style={inputStyle}
+          style={styles.input}
           type="text"
-          placeholder="Location"
           value={location}
           onChange={(e) => setLocation(e.target.value)}
           required
         />
 
+        <label style={styles.label}>Date</label>
         <input
-          style={inputStyle}
+          style={styles.input}
           type="date"
           value={date}
           onChange={(e) => setDate(e.target.value)}
           required
         />
 
-        <div style={{ marginBottom: "0.75rem" }}>
-          <label
-            style={{
-              display: "block",
-              marginBottom: "0.25rem",
-              fontWeight: "600",
-            }}
-          >
-            Payment Type:
-          </label>
-       <select
-  value={paymentType}
-  onChange={(e) => setPaymentType(e.target.value)}
->
-  <option value="Cash">Cash</option>      {/* ✅ Matches schema */}
-  <option value="Online">Online</option>  {/* ✅ Matches schema */}
-</select>
-
-        </div>
+        <label style={styles.label}>Payment Type</label>
+        <select
+          style={styles.select}
+          value={paymentType}
+          onChange={(e) => setPaymentType(e.target.value)}
+        >
+          <option value="Cash">Cash</option>
+          <option value="Online">Online</option>
+        </select>
 
         {error && (
-          <div style={{ color: "#dc2626", marginBottom: "0.5rem" }}>
-            {error}
-          </div>
+          <div style={{ ...styles.message, ...styles.error }}>{error}</div>
         )}
-
         {success && (
-          <div style={{ color: "#16a34a", marginBottom: "0.5rem" }}>
-            {success}
-          </div>
+          <div style={{ ...styles.message, ...styles.success }}>{success}</div>
         )}
 
-        <button
-          style={{
-            width: "100%",
-            backgroundColor: "#3b82f6",
-            color: "#ffffff",
-            padding: "0.5rem",
-            borderRadius: "0.25rem",
-            transition: "background-color 0.2s",
-            border: "none",
-          }}
-          type="submit"
-        >
+        <button type="submit" style={styles.button}>
           Post Job
         </button>
       </form>
     </div>
   );
 }
-
-const inputStyle = {
-  width: "100%",
-  padding: "0.5rem",
-  marginBottom: "0.75rem",
-  border: "1px solid #d1d5db",
-  borderRadius: "0.25rem",
-};
