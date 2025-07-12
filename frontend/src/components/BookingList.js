@@ -33,36 +33,131 @@ export default function BookingList() {
     fetchBookings();
   }, []);
 
+  const styles = {
+    container: {
+      padding: "2rem",
+      maxWidth: "640px",
+      margin: "0 auto",
+      fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+      backgroundColor: "#f9fafb",
+      minHeight: "100vh",
+    },
+    title: {
+      fontSize: "1.75rem",
+      fontWeight: "700",
+      color: "#111827",
+      marginBottom: "1.5rem",
+      textAlign: "center",
+    },
+    error: {
+      backgroundColor: "#fee2e2",
+      color: "#b91c1c",
+      padding: "0.75rem 1rem",
+      borderRadius: "0.375rem",
+      marginBottom: "1rem",
+      fontWeight: "500",
+      textAlign: "center",
+    },
+    bookingCard: {
+      padding: "1rem",
+      backgroundColor: "#ffffff",
+      borderRadius: "0.5rem",
+      boxShadow: "0 2px 6px rgba(0,0,0,0.05)",
+      display: "flex",
+      flexDirection: "column",
+      gap: "0.25rem",
+      transition: "transform 0.2s",
+    },
+    bookingCardHover: {
+      transform: "translateY(-2px)",
+      boxShadow: "0 4px 10px rgba(0,0,0,0.08)",
+    },
+    titleText: {
+      fontWeight: "600",
+      fontSize: "1.125rem",
+      color: "#1f2937",
+    },
+    statusText: {
+      fontSize: "0.875rem",
+      color: "#6b7280",
+    },
+    buttonRow: {
+      display: "flex",
+      gap: "0.75rem",
+      marginTop: "0.75rem",
+    },
+    button: {
+      flex: 1,
+      padding: "0.5rem",
+      fontSize: "0.875rem",
+      fontWeight: "500",
+      borderRadius: "0.375rem",
+      border: "none",
+      cursor: "pointer",
+      transition: "background-color 0.2s",
+    },
+    detailsButton: {
+      backgroundColor: "#3b82f6",
+      color: "#ffffff",
+    },
+    cancelButton: {
+      backgroundColor: "#ef4444",
+      color: "#ffffff",
+    },
+  };
+
   return (
-    <div style={{ padding: "1rem", maxWidth: "32rem", margin: "0 auto" }}>
-      <h1 style={{ fontSize: "1.5rem", fontWeight: "bold", marginBottom: "1rem" }}>My Bookings</h1>
-      {error && <div style={{ color: "red", marginBottom: "0.5rem" }}>{error}</div>}
-      <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-        {bookings.map((booking) => (
-          <div
-            key={booking._id}
-            style={{ padding: "1rem", backgroundColor: "#ffffff", borderRadius: "0.25rem", boxShadow: "0 1px 3px rgba(0,0,0,0.1)" }}
-          >
-            <span style={{ fontWeight: "600", fontSize: "1.125rem" }}>{booking.title}</span>
-            <span style={{ fontSize: "0.875rem", color: "#6b7280" }}>{booking.status} • {booking.date}</span>
-            <div style={{ display: "flex", gap: "0.5rem", marginTop: "0.5rem" }}>
-              <button
-                style={{ flex: 1, backgroundColor: "#3b82f6", color: "#fff", padding: "0.25rem", borderRadius: "0.25rem" }}
-                onClick={() => navigate(`/booking/${booking._id}`)}
-              >
-                Details
-              </button>
-              {booking.status === "Scheduled" && (
+    <div style={styles.container}>
+      <h1 style={styles.title}>My Bookings</h1>
+
+      {error && <div style={styles.error}>{error}</div>}
+
+      {bookings.length === 0 ? (
+        <p style={{ textAlign: "center", color: "#6b7280" }}>
+          No bookings found.
+        </p>
+      ) : (
+        <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+          {bookings.map((booking) => (
+            <div
+              key={booking._id}
+              style={styles.bookingCard}
+              onMouseOver={(e) =>
+                Object.assign(e.currentTarget.style, styles.bookingCardHover)
+              }
+              onMouseOut={(e) =>
+                Object.assign(e.currentTarget.style, styles.bookingCard)
+              }
+            >
+              <span style={styles.titleText}>{booking.title}</span>
+              <span style={styles.statusText}>
+                {booking.status} •{" "}
+                {new Date(booking.date).toLocaleDateString(undefined, {
+                  year: "numeric",
+                  month: "short",
+                  day: "numeric",
+                })}
+              </span>
+              <div style={styles.buttonRow}>
                 <button
-                  style={{ flex: 1, backgroundColor: "#dc2626", color: "#fff", padding: "0.25rem", borderRadius: "0.25rem" }}
+                  style={{ ...styles.button, ...styles.detailsButton }}
+                  onClick={() => navigate(`/booking/${booking._id}`)}
                 >
-                  Cancel
+                  Details
                 </button>
-              )}
+                {booking.status === "Scheduled" && (
+                  <button
+                    style={{ ...styles.button, ...styles.cancelButton }}
+                    onClick={() => alert("Cancel booking logic here.")}
+                  >
+                    Cancel
+                  </button>
+                )}
+              </div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
