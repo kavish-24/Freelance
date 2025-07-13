@@ -17,15 +17,16 @@ import BookingDetails from "./components/BookingDetails";
 import WorkerProfile from "./components/WorkerProfile";
 import ClientProfile from "./components/ClientProfile";
 import AdminPanel from "./components/AdminPanel";
-import ContrastToggle from "./components/ContrastToggle";
 
+import ClientLandingPage from "./components/Landing";
+import Search from "./components/SearchButton";
 function App() {
   // For now, no authentication logic
   // const user = null;
 
   return (
     <Router>
-      <ContrastToggle />
+     
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
@@ -39,6 +40,8 @@ function App() {
         <Route path="/profile/worker/:id" element={<WorkerProfile />} />
         <Route path="/profile/client/:id" element={<ClientProfile />} />
         <Route path="/admin" element={<AdminPanel />} />
+        <Route path="/landing" element={<ClientLandingPage />} />
+        <Route path="/search" element={<Search/>} />
         <Route path="*" element={<Navigate to="/login" />} />
       </Routes>
     </Router>

@@ -19,7 +19,7 @@ const { token, user } = res.data;
 
 localStorage.setItem("token", token);
 localStorage.setItem("userId", user.id);
-navigate("/dashboard");
+navigate("/landing");
     } catch (err) {
       setError(err.response?.data?.message || "Login failed");
     }

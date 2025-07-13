@@ -3,21 +3,54 @@ import api from "../utils/api";
 import { useNavigate, Link } from "react-router-dom";
 
 export default function Register() {
-  const [name, setName] = useState("");
-  const [phone, setPhone] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [role, setRole] = useState("client");
+  const [form, setForm] = useState({
+    name: "",
+    phone: "",
+    email: "",
+    password: "",
+    role: "client",
+    skills: "",
+    hourlyRate: "",
+    location: "",
+    availability: "",
+    lat: null,
+    lng: null,
+  });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+
+  const handleChange = (e) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
+
+  const getLocation = () => {
+    if (!navigator.geolocation) return alert("Geolocation not supported");
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setForm({
+          ...form,
+          lat: position.coords.latitude,
+          lng: position.coords.longitude,
+        });
+      },
+      () => alert("Unable to fetch location")
+    );
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError("");
+
     try {
-      await api.post("/auth/register", { name, phone, email, password, role });
+      const payload = {
+        ...form,
+        skills: form.skills.split(",").map((s) => s.trim()),
+        availability: form.availability.split(",").map((d) => ({ date: d.trim(), available: true })),
+      };
+      await api.post("/auth/register", payload);
       navigate("/login");
     } catch (err) {
       setError(err.response?.data?.message || "Registration failed");
@@ -26,77 +59,56 @@ export default function Register() {
   };
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: "100vh", backgroundColor: "#f9fafb" }}>
-      <form
-        onSubmit={handleSubmit}
-        style={{ backgroundColor: "#ffffff", padding: "2rem", borderRadius: "0.375rem", boxShadow: "0 1px 3px rgba(0,0,0,0.1)", width: "100%", maxWidth: "24rem" }}
-      >
-        <h2 style={{ fontSize: "1.5rem", fontWeight: "bold", marginBottom: "1.5rem", textAlign: "center" }}>Register</h2>
-        <input
-          style={{ width: "100%", padding: "0.5rem", marginBottom: "1rem", border: "1px solid #d1d5db", borderRadius: "0.25rem" }}
-          type="text"
-          placeholder="Full Name"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          required
-        />
-        <input
-          style={{ width: "100%", padding: "0.5rem", marginBottom: "1rem", border: "1px solid #d1d5db", borderRadius: "0.25rem" }}
-          type="tel"
-          placeholder="Phone Number"
-          value={phone}
-          onChange={(e) => setPhone(e.target.value)}
-          required
-        />
-        <input
-          style={{ width: "100%", padding: "0.5rem", marginBottom: "1rem", border: "1px solid #d1d5db", borderRadius: "0.25rem" }}
-          type="email"
-          placeholder="Email (optional)"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-        />
-        <input
-          style={{ width: "100%", padding: "0.5rem", marginBottom: "1rem", border: "1px solid #d1d5db", borderRadius: "0.25rem" }}
-          type="password"
-          placeholder="Password (optional for OTP login)"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-        />
-        <div style={{ marginBottom: "1rem", display: "flex", gap: "1rem" }}>
-          <label>
-            <input
-              type="radio"
-              value="client"
-              checked={role === "client"}
-              onChange={() => setRole("client")}
-            />{" "}
-            Client
-          </label>
-          <label>
-            <input
-              type="radio"
-              value="worker"
-              checked={role === "worker"}
-              onChange={() => setRole("worker")}
-            />{" "}
-            Worker
-          </label>
+    <div style={styles.container}>
+      <form onSubmit={handleSubmit} style={styles.form}>
+        <h2 style={styles.title}>Register</h2>
+
+        <input name="name" placeholder="Full Name" value={form.name} onChange={handleChange} required style={styles.input} />
+        <input name="phone" placeholder="Phone Number" value={form.phone} onChange={handleChange} required style={styles.input} />
+        <input name="email" placeholder="Email (optional)" value={form.email} onChange={handleChange} style={styles.input} />
+        <input name="password" type="password" placeholder="Password" value={form.password} onChange={handleChange} style={styles.input} />
+
+        <div style={styles.radioRow}>
+          <label><input type="radio" name="role" value="client" checked={form.role === "client"} onChange={handleChange} /> Client</label>
+          <label><input type="radio" name="role" value="worker" checked={form.role === "worker"} onChange={handleChange} /> Worker</label>
         </div>
-        {error && <div style={{ color: "#dc2626", marginBottom: "1rem" }}>{error}</div>}
-        <button
-          style={{ width: "100%", backgroundColor: "#16a34a", color: "#ffffff", padding: "0.5rem", borderRadius: "0.25rem", transition: "background-color 0.2s", ...(loading ? { opacity: "0.7" } : {}) }}
-          type="submit"
-          disabled={loading}
-        >
+
+        {/* Address & Geolocation */}
+        <input name="location" placeholder="Your Address" value={form.location} onChange={handleChange} style={styles.input} />
+        <button type="button" onClick={getLocation} style={styles.locateBtn}>📍 Use My Location</button>
+
+        {/* Worker-only fields */}
+        {form.role === "worker" && (
+          <>
+            <input name="skills" placeholder="Skills (comma-separated)" value={form.skills} onChange={handleChange} style={styles.input} />
+            <input name="hourlyRate" type="number" placeholder="Hourly Rate (₹)" value={form.hourlyRate} onChange={handleChange} style={styles.input} />
+            <input name="availability" placeholder="Available Dates (comma-separated)" value={form.availability} onChange={handleChange} style={styles.input} />
+          </>
+        )}
+
+        {error && <div style={styles.error}>{error}</div>}
+
+        <button type="submit" disabled={loading} style={styles.submit}>
           {loading ? "Registering..." : "Register"}
         </button>
-        <div style={{ marginTop: "1rem", textAlign: "center" }}>
-          Already have an account?{" "}
-          <Link to="/login" style={{ color: "#3b82f6", textDecoration: "underline" }}>
-            Login
-          </Link>
+
+        <div style={styles.footer}>
+          Already registered? <Link to="/login" style={styles.link}>Login</Link>
         </div>
       </form>
     </div>
   );
 }
+
+const styles = {
+  container: { display: "flex", justifyContent: "center", alignItems: "center", minHeight: "100vh", background: "#f3f4f6" },
+  form: { background: "#fff", padding: "2rem", borderRadius: "8px", boxShadow: "0 1px 3px rgba(0,0,0,0.1)", width: "100%", maxWidth: "24rem" },
+  title: { textAlign: "center", marginBottom: "1.5rem", fontSize: "1.5rem", fontWeight: "bold" },
+  input: { width: "100%", marginBottom: "1rem", padding: "0.5rem", borderRadius: "4px", border: "1px solid #ccc" },
+  radioRow: { display: "flex", justifyContent: "space-between", marginBottom: "1rem" },
+  locateBtn: { marginBottom: "1rem", fontSize: "0.875rem", color: "#2563eb", background: "transparent", border: "none", cursor: "pointer" },
+  error: { color: "#dc2626", marginBottom: "1rem" },
+  submit: { width: "100%", padding: "0.5rem", backgroundColor: "#16a34a", color: "#fff", border: "none", borderRadius: "4px", fontWeight: "bold" },
+  footer: { marginTop: "1rem", textAlign: "center", fontSize: "0.875rem" },
+  link: { color: "#2563eb", textDecoration: "underline" },
+};
