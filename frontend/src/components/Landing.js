@@ -1,186 +1,311 @@
-import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { jwtDecode } from "jwt-decode"; // Correct named import
+"use client"
+
+import { useEffect, useState, useCallback } from "react"
+import { useNavigate } from "react-router-dom"
+import { jwtDecode } from "jwt-decode"
+import {
+  FaHome,
+  FaUser,
+  FaPlus,
+  FaSearch,
+  FaTimes,
+  FaHeart,
+  FaMapMarkerAlt,
+  FaDollarSign,
+  FaCalendarAlt,
+  FaClock,
+} from "react-icons/fa"
+import "./Landing.css"
 
 export default function ClientLandingPage() {
-  const [jobs, setJobs] = useState([]);
-  const [user, setUser] = useState({ name: "" });
-  const [searchVisible, setSearchVisible] = useState(false);
-const [searchText, setSearchText] = useState("");
+  const [jobs, setJobs] = useState([])
+  const [user, setUser] = useState({ name: "" })
+  const [searchVisible, setSearchVisible] = useState(false)
+  const [searchText, setSearchText] = useState("")
+  const [isLoading, setIsLoading] = useState({ user: false, jobs: false })
+  const [error, setError] = useState(null)
+  const navigate = useNavigate()
 
-  const navigate = useNavigate();
+  // Fetch user data
+  const fetchUser = useCallback(async () => {
+    setIsLoading((prev) => ({ ...prev, user: true }))
+    try {
+      const token = localStorage.getItem("token")
+      if (!token) throw new Error("No token found")
+      const decoded = jwtDecode(token)
+      const userId = decoded.id
+      const res = await fetch(`http://localhost:5000/api/users/profile/${userId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      const data = await res.json()
+      if (res.ok) {
+        setUser({ name: data.name || "Guest" })
+      } else {
+        throw new Error(data.message || "Failed to fetch user profile")
+      }
+    } catch (err) {
+      console.error("Failed to fetch user:", err)
+      setUser({ name: "Guest" })
+      setError(err.message)
+      if (err.message === "No token found" || err.message.includes("Invalid")) {
+        localStorage.removeItem("token")
+        navigate("/login")
+      }
+    } finally {
+      setIsLoading((prev) => ({ ...prev, user: false }))
+    }
+  }, [navigate])
+
+  // Fetch jobs
+  const fetchJobs = useCallback(async () => {
+    setIsLoading((prev) => ({ ...prev, jobs: true }))
+    try {
+      const token = localStorage.getItem("token")
+      const res = await fetch("http://localhost:5000/api/jobs", {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      const data = await res.json()
+      if (res.ok) setJobs(data)
+      else throw new Error(data.message)
+    } catch (err) {
+      console.error("Failed to fetch jobs:", err)
+      setJobs([])
+      setError(err.message)
+    } finally {
+      setIsLoading((prev) => ({ ...prev, jobs: false }))
+    }
+  }, [])
 
   useEffect(() => {
-    // Fetch user data
-    const fetchUser = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        if (!token) {
-          throw new Error("No token found");
-        }
+    fetchUser()
+    fetchJobs()
+  }, [fetchUser, fetchJobs])
 
-        // Decode token to get user ID
-        const decoded = jwtDecode(token);
-        const userId = decoded.id; // Ensure token payload has 'id' field
+  // Handle search input change
+  const handleSearchChange = useCallback((e) => {
+    setSearchText(e.target.value)
+  }, [])
 
-        const res = await fetch(`http://localhost:5000/api/users/profile/${userId}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        const data = await res.json();
-        if (res.ok) {
-          setUser({ name: data.name || "Guest" }); // Use name from response
-        } else {
-          throw new Error(data.message || "Failed to fetch user profile");
-        }
-      }catch (err) {
-  console.error("Failed to fetch user:", err);
-  setUser({ name: "Guest" });
+  // Clear search input
+  const clearSearch = useCallback(() => {
+    setSearchText("")
+    setSearchVisible(false)
+  }, [])
 
-  if (err.message === "No token found" || err.message.includes("Invalid")) {
-    localStorage.removeItem("token");
-    navigate("/login");
+  // Get status badge class
+  const getStatusClass = (status) => {
+    switch (status.toLowerCase()) {
+      case "active":
+        return "status-badge status-active"
+      case "in progress":
+        return "status-badge status-progress"
+      case "completed":
+        return "status-badge status-completed"
+      default:
+        return "status-badge status-default"
+    }
   }
-}
 
-    };
+  // Filter jobs based on search
+  const filteredJobs = jobs.filter(
+    (job) =>
+      job.title.toLowerCase().includes(searchText.toLowerCase()) ||
+      job.description?.toLowerCase().includes(searchText.toLowerCase()),
+  )
 
-    // Fetch jobs
-    const fetchJobs = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        const res = await fetch("http://localhost:5000/api/jobs", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        const data = await res.json();
-        if (res.ok) setJobs(data);
-        else throw new Error(data.message);
-      } catch (err) {
-        console.error("Failed to fetch jobs:", err);
-        setJobs([]);
-      }
-    };
-
-    fetchUser();
-    fetchJobs();
-  }, [navigate]);
-
-  const containerStyle = {
-    padding: "1rem",
-    maxWidth: "28rem",
-    margin: "0 auto",
-    fontFamily: "'Segoe UI', sans-serif",
-    backgroundColor: "#f9fafb",
-    minHeight: "100vh",
-  };
-
-  const navBarStyle = {
-    position: "fixed",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: "white",
-    borderTop: "1px solid #e5e7eb",
-    display: "flex",
-    justifyContent: "space-around",
-    padding: "0.5rem 0",
-  };
-
-  const navButtonStyle = {
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
-    color: "#6b7280",
-    fontSize: "0.875rem",
-  };
-
-  return (
-    <div style={containerStyle}>
-      <div style={{ display: "flex", justifyContent: "space-between" }}>
-        <button
-  onClick={() => navigate("/profile/client/:id")}
-  style={{
-    width: "2rem",
-    height: "2rem",
-    backgroundColor: "#e5e7eb",
-    borderRadius: "50%",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    fontSize: "0.75rem",
-    border: "none",
-    cursor: "pointer",
-  }}
->
-  {user.name ? user.name[0] : "?"}
-</button>
-
-         
-        <button style={{ backgroundColor: "#dbeafe", color: "#3b82f6", borderRadius: "9999px", padding: "0.25rem 0.75rem", fontSize: "0.75rem" }}>♥ 100</button>
-        {searchVisible ? (
-  <input
-    type="text"
-    placeholder="Search jobs..."
-    value={searchText}
-    onChange={(e) => setSearchText(e.target.value)}
-    style={{
-      marginLeft: "1rem",
-      padding: "0.25rem 0.5rem",
-      fontSize: "0.75rem",
-      border: "1px solid #d1d5db",
-      borderRadius: "0.375rem",
-    }}
-  />
-) : (
-  <button
-    onClick={() => setSearchVisible(true)}
-    style={{ fontSize: "0.75rem", marginLeft: "1rem", color: "#3b82f6", background: "none", border: "none" }}
-  >
-    🔍
-  </button>
-)}
-
-      </div>
-
-      <div style={{ textAlign: "center", marginTop: "1.5rem" }}>
-        <img
-          src="https://upload.wikimedia.org/wikipedia/commons/9/97/The_Earth_seen_from_Apollo_17.jpg"
-          alt="Earth"
-          style={{ width: "4rem", height: "4rem", borderRadius: "9999px", margin: "0 auto" }}
-        />
-        <h1 style={{ fontSize: "1.25rem", fontWeight: 700, marginTop: "0.5rem" }}>
-          WELCOME, {user.name ? user.name.toUpperCase() : "LOADING..."}
-        </h1>
-        <p style={{ fontSize: "0.75rem", color: "#6b7280" }}>Find help for your short-term tasks quickly and securely.</p>
-      </div>
-
-      <div style={{ marginTop: "2rem" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <h2 style={{ fontSize: "0.75rem", fontWeight: 600 }}>MY POSTED JOBS</h2>
-          <button style={{ fontSize: "0.75rem", color: "#6b7280" }} onClick={() => navigate("/post-job")}>+ Post Job</button>
+  // Job Card Component
+  const JobCard = ({ job }) => (
+    <div className="job-card">
+      <div className="job-card-header">
+        <div className="job-title-section">
+          <h3 className="job-title">{job.title}</h3>
+          <span className={getStatusClass(job.status)}>{job.status}</span>
         </div>
-        <p style={{ fontSize: "0.75rem", color: "#374151", marginBottom: "1rem" }}>Your latest job listings</p>
+        {job.budget && (
+          <div className="job-budget">
+            <FaDollarSign />
+            <span>{job.budget}</span>
+          </div>
+        )}
+      </div>
 
-        <div style={{ display: "flex", gap: "1rem", overflowX: "auto", paddingBottom: "0.5rem" }}>
-          {jobs.length === 0 ? (
-            <p style={{ fontSize: "0.75rem", color: "#9ca3af" }}>No jobs found</p>
-          ) : (jobs
-  .filter((job) =>
-    job.title.toLowerCase().includes(searchText.toLowerCase()) ||
-    job.description?.toLowerCase().includes(searchText.toLowerCase())
-  ).map((job) => (
-              <div key={job._id} style={{ minWidth: "150px", backgroundColor: "white", borderRadius: "0.375rem", boxShadow: "0 1px 3px rgba(0,0,0,0.1)", padding: "0.5rem" }}>
-                <h3 style={{ fontSize: "0.75rem", fontWeight: 600 }}>{job.title}</h3>
-                <p style={{ fontSize: "0.625rem", color: "#6b7280" }}>{job.description?.slice(0, 50)}...</p>
-                <div style={{ fontSize: "0.625rem", color: "#3b82f6", fontWeight: 600, marginTop: "0.25rem" }}>{job.status} • {job.date}</div>
-              </div>
-            ))
+      <div className="job-card-content">
+        <p className="job-description">{job.description?.slice(0, 120)}...</p>
+
+        <div className="job-meta">
+          <div className="job-meta-item">
+            <FaCalendarAlt />
+            <span>{new Date(job.date).toLocaleDateString()}</span>
+          </div>
+          {job.location && (
+            <div className="job-meta-item">
+              <FaMapMarkerAlt />
+              <span>{job.location}</span>
+            </div>
           )}
         </div>
       </div>
     </div>
-  );
+  )
+
+  // Loading Skeleton Component
+  const JobSkeleton = () => (
+    <div className="job-card skeleton">
+      <div className="skeleton-header">
+        <div className="skeleton-title"></div>
+        <div className="skeleton-badge"></div>
+      </div>
+      <div className="skeleton-content">
+        <div className="skeleton-line"></div>
+        <div className="skeleton-line short"></div>
+        <div className="skeleton-meta">
+          <div className="skeleton-meta-item"></div>
+          <div className="skeleton-meta-item"></div>
+        </div>
+      </div>
+    </div>
+  )
+
+  return (
+    <div className="landing-container">
+      {/* Header */}
+      <header className="header">
+        <div className="header-content">
+          <button
+            onClick={() => navigate("/profile/client/:id")}
+            className="profile-button"
+            aria-label={`Go to ${user.name}'s profile`}
+          >
+            <div className="avatar">{isLoading.user ? "..." : user.name ? user.name[0].toUpperCase() : "?"}</div>
+            <span className="profile-name">{isLoading.user ? "Loading..." : user.name || "Guest"}</span>
+          </button>
+
+          <div className="header-actions">
+            <button className="likes-button">
+              <FaHeart />
+              <span>100</span>
+            </button>
+
+            {searchVisible ? (
+              <div className="search-container">
+                <input
+                  type="text"
+                  placeholder="Search jobs..."
+                  value={searchText}
+                  onChange={handleSearchChange}
+                  className="search-input"
+                  aria-label="Search jobs"
+                  autoFocus
+                />
+                {searchText && (
+                  <button onClick={clearSearch} className="clear-button" aria-label="Clear search">
+                    <FaTimes />
+                  </button>
+                )}
+              </div>
+            ) : (
+              <button onClick={() => setSearchVisible(true)} className="search-button" aria-label="Open search">
+                <FaSearch />
+              </button>
+            )}
+          </div>
+        </div>
+      </header>
+
+      {/* Welcome Section */}
+      <section className="welcome-section">
+        <div className="welcome-background">
+          <img
+            src="https://upload.wikimedia.org/wikipedia/commons/9/97/The_Earth_seen_from_Apollo_17.jpg"
+            alt="Earth"
+            className="welcome-image"
+          />
+          <div className="welcome-overlay"></div>
+        </div>
+        <div className="welcome-content">
+          <h1 className="welcome-title">WELCOME, {isLoading.user ? "LOADING..." : user.name.toUpperCase()}</h1>
+          <p className="welcome-subtitle">
+            Find help for your short-term tasks quickly and securely. Connect with talented professionals worldwide.
+          </p>
+        </div>
+      </section>
+
+      {/* Jobs Section */}
+      <main className="jobs-section">
+        <div className="jobs-header">
+          <div className="jobs-title-section">
+            <h2 className="jobs-title">MY POSTED JOBS</h2>
+            <p className="jobs-subtitle">Your latest job listings and their current status</p>
+          </div>
+          <button onClick={() => navigate("/post-job")} className="post-job-button">
+            <FaPlus />
+            <span>Post Job</span>
+          </button>
+        </div>
+
+        {error && (
+          <div className="error-alert">
+            <p>{error}</p>
+          </div>
+        )}
+
+        <div className="jobs-content">
+          {isLoading.jobs ? (
+            <div className="jobs-grid">
+              {[...Array(6)].map((_, i) => (
+                <JobSkeleton key={i} />
+              ))}
+            </div>
+          ) : filteredJobs.length === 0 ? (
+            <div className="empty-state">
+              <div className="empty-icon">
+                <FaClock />
+              </div>
+              <h3 className="empty-title">{searchText ? "No jobs found" : "No jobs posted yet"}</h3>
+              <p className="empty-description">
+                {searchText
+                  ? `No jobs match "${searchText}". Try a different search term.`
+                  : "Start by posting your first job to find talented professionals."}
+              </p>
+              {!searchText && (
+                <button onClick={() => navigate("/post-job")} className="empty-cta-button">
+                  <FaPlus />
+                  <span>Post Your First Job</span>
+                </button>
+              )}
+            </div>
+          ) : (
+            <div className="jobs-grid">
+              {filteredJobs.map((job) => (
+                <JobCard key={job._id} job={job} />
+              ))}
+            </div>
+          )}
+        </div>
+      </main>
+
+      {/* Fixed Bottom Navbar */}
+      <nav className="navbar">
+        <button onClick={() => navigate("/home")} className="nav-button" aria-label="Go to Home">
+          <FaHome />
+          <span>Home</span>
+        </button>
+        <button
+          onClick={() => navigate(`/profile/client/${jwtDecode(localStorage.getItem("token"))?.id}`)}
+          className="nav-button"
+          aria-label="Go to Profile"
+        >
+          <FaUser />
+          <span>Profile</span>
+        </button>
+        <button onClick={() => navigate("/post-job")} className="nav-button" aria-label="Post a Job">
+          <FaPlus />
+          <span>Post Job</span>
+        </button>
+      </nav>
+
+      {/* Bottom padding for fixed navbar */}
+      <div className="navbar-spacer"></div>
+    </div>
+  )
 }
